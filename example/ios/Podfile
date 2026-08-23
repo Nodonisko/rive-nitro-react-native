@@ -58,5 +58,20 @@ target 'RiveExample' do
       # :ccache_enabled => true
     )
 
+    # NitroModules 0.37.0 exposes `ReactProp.hpp` in its modulemap, which reaches
+    # `<glog/logging.h>` through React's `RawValue.h`. glog 0.3.5 includes headers from
+    # inside `namespace google`, which is illegal once glog is imported as a module, so
+    # every target that builds the NitroModules module fails to compile. Same class of
+    # breakage as mrousavy/nitro#1520, which fixed only the `cxxreact` half of it in 0.37.0.
+    # Nothing in React Native `@import`s glog, so drop its modulemap and let every target
+    # include it textually. Remove once Nitro keeps React's renderer headers out of its
+    # public modulemap.
+    Dir.glob(File.join(__dir__, 'Pods', 'Target Support Files', '*', '*.xcconfig')).each do |xcconfig|
+      contents = File.read(xcconfig)
+      patched = contents.gsub(
+        /\s*(-Xcc\s+)?-fmodule-map-file="\$\{PODS_ROOT\}\/Headers\/Public\/glog\/glog\.modulemap"/, ''
+      )
+      File.write(xcconfig, patched) if patched != contents
+    end
   end
 end

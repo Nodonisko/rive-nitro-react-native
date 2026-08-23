@@ -57,6 +57,7 @@ module.exports = {
           fonts: ['./assets/kanit_regular.ttf'],
         },
       ],
+      './plugins/with-textual-glog',
     ],
     experiments: {
       typedRoutes: true,
